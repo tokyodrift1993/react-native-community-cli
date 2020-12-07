@@ -114,8 +114,6 @@ function printUnknownCommand(cmdName: string) {
   }
 }
 
-type a = CommandOption<false>['default'];
-
 /**
  * Attaches a new command onto global `commander` instance.
  *
