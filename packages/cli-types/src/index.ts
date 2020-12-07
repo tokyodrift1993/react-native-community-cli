@@ -15,30 +15,26 @@ import {Ora} from 'ora';
 
 export type Prompt = any;
 
-export type CommandFunction<Args = Object> = (
+export type CommandFunction<IsDetached, Args = Object> = (
   argv: Array<string>,
-  ctx: Config,
+  ctx: IsDetached extends true ? Config | null : Config,
   args: Args,
 ) => Promise<void> | void;
 
 export type OptionValue = string | boolean | number;
 
-export type CommandOption<T = (ctx: Config) => OptionValue> = {
+export type CommandOption<IsDetached> = {
   name: string;
   description?: string;
   parse?: (val: string) => any;
-  default?: OptionValue | T;
+  default?: (
+    ctx: IsDetached extends true ? Config | null : Config,
+  ) => OptionValue;
 };
-
-export type DetachedCommandFunction<Args = Object> = (
-  argv: string[],
-  args: Args,
-) => Promise<void> | void;
 
 export type Command<IsDetached extends boolean = false> = {
   name: string;
   description?: string;
-  detached?: IsDetached;
   examples?: Array<{
     desc: string;
     cmd: string;
@@ -47,16 +43,11 @@ export type Command<IsDetached extends boolean = false> = {
     name: string;
     version: string;
   };
-  func: IsDetached extends true
-    ? DetachedCommandFunction<Object>
-    : CommandFunction<Object>;
-  options?: Array<
-    CommandOption<
-      IsDetached extends true ? () => OptionValue : (ctx: Config) => OptionValue
-    >
-  >;
+  func: CommandFunction<IsDetached, Object>;
+  options?: Array<CommandOption<IsDetached>>;
 };
 
+export type DetachedCommandFunction<T> = CommandFunction<true, T>;
 export type DetachedCommand = Command<true>;
 
 interface PlatformConfig<

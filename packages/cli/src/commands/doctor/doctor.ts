@@ -109,7 +109,8 @@ const getAutomaticFixForPlatform = (
   }
 };
 
-export default (async (_, options) => {
+export default (async (_args, _ctx, options) => {
+  console.log(_ctx);
   const Loader = getLoader();
   const loader = new Loader();
 

@@ -4,7 +4,12 @@ import commander from 'commander';
 import leven from 'leven';
 import path from 'path';
 
-import {Command, Config} from '@react-native-community/cli-types';
+import {
+  Command,
+  CommandFunction,
+  CommandOption,
+  Config,
+} from '@react-native-community/cli-types';
 import {logger, CLIError} from '@react-native-community/cli-tools';
 
 import {detachedCommands, projectCommands} from './commands';
@@ -109,15 +114,7 @@ function printUnknownCommand(cmdName: string) {
   }
 }
 
-/**
- * Custom type assertion needed for the `makeCommand` conditional
- * types to be properly resolved.
- */
-const isDetachedCommand = (
-  command: Command<boolean>,
-): command is Command<true> => {
-  return command.detached === true;
-};
+type a = CommandOption<false>['default'];
 
 /**
  * Attaches a new command onto global `commander` instance.
@@ -127,7 +124,7 @@ const isDetachedCommand = (
  */
 function attachCommand<IsDetached extends boolean>(
   command: Command<IsDetached>,
-  ...rest: IsDetached extends false ? [Config] : []
+  ...rest: IsDetached extends false ? [Config] : [null]
 ): void {
   const cmd = commander
     .command(command.name)
@@ -139,11 +136,11 @@ function attachCommand<IsDetached extends boolean>(
       const argv = Array.from(args).slice(0, -1);
 
       try {
-        if (isDetachedCommand(command)) {
-          await command.func(argv, passedOptions);
-        } else {
-          await command.func(argv, rest[0] as Config, passedOptions);
-        }
+        await command.func(
+          argv,
+          rest[0] as Parameters<CommandFunction<IsDetached>>[1],
+          passedOptions,
+        );
       } catch (error) {
         handleError(error);
       }
@@ -165,7 +162,11 @@ function attachCommand<IsDetached extends boolean>(
       opt.description,
       opt.parse || ((val: any) => val),
       typeof opt.default === 'function'
-        ? opt.default(rest[0] as Config)
+        ? opt.default(
+            rest[0] as Parameters<
+              NonNullable<CommandOption<IsDetached>['default']>
+            >[0],
+          )
         : opt.default,
     );
   }
@@ -209,14 +210,8 @@ async function setupAndRun() {
     }
   }
 
-  for (const command of detachedCommands) {
-    attachCommand(command);
-  }
-
   try {
     const config = loadConfig();
-
-    logger.enable();
 
     for (const command of [...projectCommands, ...config.commands]) {
       attachCommand(command, config);
@@ -224,13 +219,19 @@ async function setupAndRun() {
   } catch (error) {
     /**
      * When there is no `package.json` found, the CLI will enter `detached` mode and a subset
-     * of commands will be available. That's why we don't throw on such kind of error.
+     * of commands will be available.
+     *
+     * That's why we don't throw on such kind of error, but register a subset of commands.
      */
     if (error.message.includes("We couldn't find a package.json")) {
       logger.debug(error.message);
       logger.debug(
         'Failed to load configuration of your project. Only a subset of commands will be available.',
       );
+
+      for (const command of detachedCommands) {
+        attachCommand(command, null);
+      }
     } else {
       throw new CLIError(
         'Failed to load configuration of your project.',
