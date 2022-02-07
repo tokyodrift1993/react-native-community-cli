@@ -59,8 +59,13 @@ export async function buildApk(
         .filter((arch) => arch != null);
       if (architectures.length > 0) {
         logger.info(`Detected architectures ${architectures.join(', ')}`);
+        // `reactNativeDebugArchitectures` was renamed to `reactNativeArchitectures` in 0.68.
+        // Can be removed when 0.67 no longer needs to be supported.
         gradleArgs.push(
           '-PreactNativeDebugArchitectures=' + architectures.join(','),
+        );
+        gradleArgs.push(
+          '-PreactNativeArchitectures=' + architectures.join(','),
         );
       }
     }
@@ -155,8 +160,13 @@ async function installApkWithGradle(
         .filter((arch) => arch != null);
       if (architectures.length > 0) {
         logger.info(`Detected architectures ${architectures.join(', ')}`);
+        // `reactNativeDebugArchitectures` was renamed to `reactNativeArchitectures` in 0.68.
+        // Can be removed when 0.67 no longer needs to be supported.
         gradleArgs.push(
           '-PreactNativeDebugArchitectures=' + architectures.join(','),
+        );
+        gradleArgs.push(
+          '-PreactNativeArchitectures=' + architectures.join(','),
         );
       }
     }
