@@ -42,7 +42,6 @@ async function runOnAllDevices(
     }
   }
 
-
   await buildApk(args, gradlew, adbPath, devices, androidProject);
   await installApk(args, gradlew, adbPath, devices, androidProject);
 
