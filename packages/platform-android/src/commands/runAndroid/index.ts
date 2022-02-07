@@ -134,7 +134,7 @@ async function runOnSpecificDevice(
   const {deviceId} = args;
   if (devices.length > 0 && deviceId) {
     if (devices.indexOf(deviceId) !== -1) {
-      await buildApk(args, gradlew, androidProject);
+      await buildApk(args, gradlew, adbPath, [deviceId], androidProject);
       tryRunAdbReverse(args.port, deviceId);
       await installApk(args, gradlew, adbPath, [deviceId], androidProject);
       tryLaunchAppOnDevice(deviceId, androidProject.packageName, adbPath, args);

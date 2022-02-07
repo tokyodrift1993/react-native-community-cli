@@ -43,7 +43,7 @@ async function runOnAllDevices(
   }
 
 
-  await buildApk(args, gradlew, androidProject);
+  await buildApk(args, gradlew, adbPath, devices, androidProject);
   await installApk(args, gradlew, adbPath, devices, androidProject);
 
   (devices.length > 0 ? devices : [undefined]).forEach(

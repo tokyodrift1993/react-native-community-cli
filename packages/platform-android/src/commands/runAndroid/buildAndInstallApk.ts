@@ -40,6 +40,8 @@ function getGradleBaseArgs(
 export async function buildApk(
   args: Flags,
   gradlew: string,
+  adbPath: string,
+  devices: string[],
   androidProject: AndroidProject,
 ) {
   try {
@@ -47,6 +49,20 @@ export async function buildApk(
 
     if (args.port != null) {
       gradleArgs.push('-PreactNativeDevServerPort=' + args.port);
+    }
+
+    if (args.activeArchOnly) {
+      const architectures = devices
+        .map((device) => {
+          return adb.getCPU(adbPath, device);
+        })
+        .filter((arch) => arch != null);
+      if (architectures.length > 0) {
+        logger.info(`Detected architectures ${architectures.join(', ')}`);
+        gradleArgs.push(
+          '-PreactNativeDebugArchitectures=' + architectures.join(','),
+        );
+      }
     }
 
     logger.info('Building the apk...');
@@ -94,7 +110,7 @@ export async function installApk(
       );
     }
   } else {
-    await installApkWithGradle(args, gradlew, androidProject);
+    await installApkWithGradle(args, gradlew, adbPath, devices, androidProject);
   }
 }
 
@@ -121,12 +137,28 @@ async function installApkFromPath(
 async function installApkWithGradle(
   args: Flags,
   gradlew: string,
+  adbPath: string,
+  devices: string[],
   androidProject: AndroidProject,
 ) {
   try {
     const gradleArgs = getGradleBaseArgs('install', args, androidProject);
     if (args.port != null) {
       gradleArgs.push('-PreactNativeDevServerPort=' + args.port);
+    }
+
+    if (args.activeArchOnly) {
+      const architectures = devices
+        .map((device) => {
+          return adb.getCPU(adbPath, device);
+        })
+        .filter((arch) => arch != null);
+      if (architectures.length > 0) {
+        logger.info(`Detected architectures ${architectures.join(', ')}`);
+        gradleArgs.push(
+          '-PreactNativeDebugArchitectures=' + architectures.join(','),
+        );
+      }
     }
 
     logger.info('Installing the app on the devices through gradle...');
