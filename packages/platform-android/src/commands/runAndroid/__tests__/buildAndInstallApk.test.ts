@@ -26,7 +26,7 @@ jest.mock('fs');
 jest.mock('path');
 
 describe('apk', () => {
-  const args = {
+  const args: Flags = {
     root: '/root',
     appFolder: '',
     appId: '',
@@ -39,6 +39,7 @@ describe('apk', () => {
     port: 8081,
     terminal: 'iTerm2',
     jetifier: true,
+    activeArchOnly: false,
   };
   const androidProject = {
     manifestPath: '/android/app/src/main/AndroidManifest.xml',
@@ -90,7 +91,7 @@ describe('apk', () => {
 
   describe('buildApk', () => {
     it('uses default assembleDebug task', async () => {
-      await buildApk(args, gradle, androidProject);
+      await buildApk(args, gradle, adb, [], androidProject);
 
       const calls = ((execa as unknown) as jest.Mock).mock.calls;
 
@@ -113,7 +114,7 @@ describe('apk', () => {
         appName,
       };
 
-      await buildApk(testArgs, gradle, testProject);
+      await buildApk(testArgs, gradle, adb, [], testProject);
 
       expect(((execa as unknown) as jest.Mock).mock.calls[0][1]).toEqual([
         `${appName}:assemble${variant}`,
