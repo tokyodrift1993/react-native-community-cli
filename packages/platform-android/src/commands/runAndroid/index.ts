@@ -21,28 +21,11 @@ import {
   getDefaultUserTerminal,
   CLIError,
 } from '@react-native-community/cli-tools';
-import warnAboutManuallyLinkedLibs from '../../link/warnAboutManuallyLinkedLibs';
-import {getAndroidProject, getPackageName} from '../../utils/getAndroidProject';
-
-function displayWarnings(config: Config, args: Flags) {
-  warnAboutManuallyLinkedLibs(config);
-  if (args.appFolder) {
-    logger.warn(
-      'Using deprecated "--appFolder" flag. Use "project.android.appName" in react-native.config.js instead.',
-    );
-  }
-  if (args.root) {
-    logger.warn(
-      'Using deprecated "--root" flag. App root is discovered automatically. Alternatively, set "project.android.sourceDir" in react-native.config.js.',
-    );
-  }
-}
+import {getAndroidProject} from '../../config/getAndroidProject';
 
 export interface Flags {
   tasks?: Array<string>;
-  root: string;
   variant: string;
-  appFolder: string;
   appId: string;
   appIdSuffix: string;
   mainActivity: string;
@@ -60,7 +43,6 @@ type AndroidProject = NonNullable<Config['project']['android']>;
  * Starts the app on a connected Android emulator or device.
  */
 async function runAndroid(_argv: Array<string>, config: Config, args: Flags) {
-  displayWarnings(config, args);
   const androidProject = getAndroidProject(config);
 
   if (args.jetifier) {
@@ -112,21 +94,17 @@ function buildAndRun(args: Flags, androidProject: AndroidProject) {
   process.chdir(androidProject.sourceDir);
   const cmd = process.platform.startsWith('win') ? 'gradlew.bat' : './gradlew';
 
-  const {appFolder} = args;
-  const packageName = getPackageName(androidProject, appFolder);
-
   const adbPath = getAdbPath();
   if (args.deviceId) {
-    return runOnSpecificDevice(args, cmd, packageName, adbPath, androidProject);
+    return runOnSpecificDevice(args, cmd, adbPath, androidProject);
   } else {
-    return runOnAllDevices(args, cmd, packageName, adbPath, androidProject);
+    return runOnAllDevices(args, cmd, adbPath, androidProject);
   }
 }
 
 function runOnSpecificDevice(
   args: Flags,
   gradlew: 'gradlew.bat' | './gradlew',
-  packageName: string,
   adbPath: string,
   androidProject: AndroidProject,
 ) {
@@ -135,13 +113,7 @@ function runOnSpecificDevice(
   if (devices.length > 0 && deviceId) {
     if (devices.indexOf(deviceId) !== -1) {
       buildApk(gradlew, androidProject.sourceDir);
-      installAndLaunchOnDevice(
-        args,
-        deviceId,
-        packageName,
-        adbPath,
-        androidProject,
-      );
+      installAndLaunchOnDevice(args, deviceId, adbPath, androidProject);
     } else {
       logger.error(
         `Could not find device with the id: "${deviceId}". Please choose one of the following:`,
@@ -174,11 +146,10 @@ function tryInstallAppOnDevice(
   try {
     // "app" is usually the default value for Android apps with only 1 app
     const {appName, sourceDir} = androidProject;
-    const {appFolder} = args;
     const variant = args.variant.toLowerCase();
     const buildDirectory = `${sourceDir}/${appName}/build/outputs/apk/${variant}`;
     const apkFile = getInstallApkName(
-      appFolder || appName, // TODO: remove appFolder
+      appName,
       adbPath,
       variant,
       device,
@@ -226,13 +197,17 @@ function getInstallApkName(
 function installAndLaunchOnDevice(
   args: Flags,
   selectedDevice: string,
-  packageName: string,
   adbPath: string,
   androidProject: AndroidProject,
 ) {
   tryRunAdbReverse(args.port, selectedDevice);
   tryInstallAppOnDevice(args, adbPath, selectedDevice, androidProject);
-  tryLaunchAppOnDevice(selectedDevice, packageName, adbPath, args);
+  tryLaunchAppOnDevice(
+    selectedDevice,
+    androidProject.packageName,
+    adbPath,
+    args,
+  );
 }
 
 function startServerInNewWindow(
@@ -319,20 +294,9 @@ export default {
   func: runAndroid,
   options: [
     {
-      name: '--root <string>',
-      description:
-        '[DEPRECATED - root is discovered automatically] Override the root directory for the android build (which contains the android directory)',
-      default: '',
-    },
-    {
       name: '--variant <string>',
       description: "Specify your app's build variant",
       default: 'debug',
-    },
-    {
-      name: '--appFolder <string>',
-      description:
-        '[DEPRECATED – use "project.android.appName" in react-native.config.js] Specify a different application folder name for the android source. If not, we assume is "app"',
     },
     {
       name: '--appId <string>',

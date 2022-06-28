@@ -2,27 +2,15 @@
 
 exports[`should apply build types from dependency config 1`] = `
 Object {
-  "assets": Array [],
-  "hooks": Object {},
   "name": "react-native-test",
-  "params": Array [],
   "platforms": Object {
     "android": null,
     "ios": Object {
       "configurations": Array [
         "debug",
       ],
-      "folder": "<<REPLACED>>/node_modules/react-native-test",
-      "libraryFolder": "Libraries",
-      "pbxprojPath": "<<REPLACED>>/node_modules/react-native-test/ios/HelloWorld.xcodeproj/project.pbxproj",
-      "plist": Array [],
-      "podfile": null,
-      "podspecPath": null,
-      "projectName": "HelloWorld.xcodeproj",
-      "projectPath": "<<REPLACED>>/node_modules/react-native-test/ios/HelloWorld.xcodeproj",
+      "podspecPath": "<<REPLACED>>/node_modules/react-native-test/ReactNativeTest.podspec",
       "scriptPhases": Array [],
-      "sharedLibraries": Array [],
-      "sourceDir": "<<REPLACED>>/node_modules/react-native-test/ios",
     },
   },
   "root": "<<REPLACED>>/node_modules/react-native-test",
@@ -31,7 +19,6 @@ Object {
 
 exports[`should have a valid structure by default 1`] = `
 Object {
-  "assets": Array [],
   "commands": Array [],
   "dependencies": Object {},
   "healthChecks": Array [],
@@ -57,27 +44,18 @@ Array [
 
 exports[`should merge project configuration with default values: snapshoting \`react-native-test\` config 1`] = `
 Object {
-  "assets": Array [
-    "foo",
-  ],
-  "hooks": Object {},
   "name": "react-native-test",
-  "params": Array [],
   "platforms": Object {
     "android": null,
     "ios": Object {
       "configurations": Array [],
-      "folder": "<<REPLACED>>/node_modules/react-native-test",
-      "libraryFolder": "Libraries",
-      "pbxprojPath": "<<REPLACED>>/node_modules/react-native-test/ios/HelloWorld.xcodeproj/project.pbxproj",
-      "plist": Array [],
-      "podfile": null,
-      "podspecPath": null,
-      "projectName": "HelloWorld.xcodeproj",
-      "projectPath": "<<REPLACED>>/node_modules/react-native-test/ios/HelloWorld.xcodeproj",
-      "scriptPhases": Array [],
-      "sharedLibraries": Array [],
-      "sourceDir": "./abc",
+      "podspecPath": "<<REPLACED>>/node_modules/react-native-test/ReactNativeTest.podspec",
+      "scriptPhases": Array [
+        Object {
+          "name": "abc",
+          "path": "./phase.sh",
+        },
+      ],
     },
   },
   "root": "<<REPLACED>>/node_modules/react-native-test",
@@ -86,25 +64,36 @@ Object {
 
 exports[`should read a config of a dependency and use it to load other settings 1`] = `
 Object {
-  "assets": Array [],
-  "hooks": Object {},
   "name": "react-native-test",
-  "params": Array [],
   "platforms": Object {
     "android": null,
     "ios": Object {
       "configurations": Array [],
-      "folder": "<<REPLACED>>/node_modules/react-native-test",
-      "libraryFolder": "Libraries",
-      "pbxprojPath": "<<REPLACED>>/node_modules/react-native-test/customLocation/customProject.xcodeproj/project.pbxproj",
-      "plist": Array [],
-      "podfile": null,
       "podspecPath": "<<REPLACED>>/node_modules/react-native-test/ReactNativeTest.podspec",
-      "projectName": "customProject.xcodeproj",
-      "projectPath": "<<REPLACED>>/node_modules/react-native-test/customLocation/customProject.xcodeproj",
-      "scriptPhases": Array [],
-      "sharedLibraries": Array [],
-      "sourceDir": "<<REPLACED>>/node_modules/react-native-test/customLocation",
+      "scriptPhases": Array [
+        Object {
+          "dependency_file": "/path/to/dependency/file",
+          "execution_position": "after_compile",
+          "input_file_lists": Array [
+            "input_file_1",
+            "input_file_2",
+          ],
+          "input_files": Array [
+            "input_file",
+          ],
+          "name": "[TEST] Some Configuration",
+          "output_file_lists": Array [
+            "output_file_1",
+            "output_file_2",
+          ],
+          "output_files": Array [
+            "output_file",
+          ],
+          "path": "./customLocation/custom.sh",
+          "shell_path": "some/shell/path/bash",
+          "show_env_vars_in_log": false,
+        },
+      ],
     },
   },
   "root": "<<REPLACED>>/node_modules/react-native-test",
@@ -114,10 +103,7 @@ Object {
 exports[`should return dependencies from package.json 1`] = `
 Object {
   "react-native": Object {
-    "assets": Array [],
-    "hooks": Object {},
     "name": "react-native",
-    "params": Array [],
     "platforms": Object {
       "android": null,
       "ios": null,
@@ -125,25 +111,13 @@ Object {
     "root": "<<REPLACED>>/node_modules/react-native",
   },
   "react-native-test": Object {
-    "assets": Array [],
-    "hooks": Object {},
     "name": "react-native-test",
-    "params": Array [],
     "platforms": Object {
       "android": null,
       "ios": Object {
         "configurations": Array [],
-        "folder": "<<REPLACED>>/node_modules/react-native-test",
-        "libraryFolder": "Libraries",
-        "pbxprojPath": "<<REPLACED>>/node_modules/react-native-test/ios/HelloWorld.xcodeproj/project.pbxproj",
-        "plist": Array [],
-        "podfile": null,
-        "podspecPath": null,
-        "projectName": "HelloWorld.xcodeproj",
-        "projectPath": "<<REPLACED>>/node_modules/react-native-test/ios/HelloWorld.xcodeproj",
+        "podspecPath": "<<REPLACED>>/node_modules/react-native-test/ReactNativeTest.podspec",
         "scriptPhases": Array [],
-        "sharedLibraries": Array [],
-        "sourceDir": "<<REPLACED>>/node_modules/react-native-test/ios",
       },
     },
     "root": "<<REPLACED>>/node_modules/react-native-test",
@@ -157,28 +131,27 @@ exports[`should skip packages that have invalid configuration: logged warning 1`
 
 exports[`supports dependencies from user configuration with custom build type 1`] = `
 Object {
-  "assets": Array [],
-  "hooks": Object {},
   "name": "react-native-test",
-  "params": Array [],
   "platforms": Object {
     "android": null,
     "ios": Object {
       "configurations": Array [
         "custom_build_type",
       ],
-      "folder": "<<REPLACED>>/node_modules/react-native-test",
-      "libraryFolder": "Libraries",
-      "pbxprojPath": "<<REPLACED>>/node_modules/react-native-test/ios/HelloWorld.xcodeproj/project.pbxproj",
-      "plist": Array [],
-      "podfile": null,
-      "podspecPath": null,
-      "projectName": "HelloWorld.xcodeproj",
-      "projectPath": "<<REPLACED>>/node_modules/react-native-test/ios/HelloWorld.xcodeproj",
+      "podspecPath": "<<REPLACED>>/node_modules/react-native-test/ReactNativeTest.podspec",
       "scriptPhases": Array [],
-      "sharedLibraries": Array [],
-      "sourceDir": "<<REPLACED>>/node_modules/react-native-test/ios",
     },
+  },
+  "root": "<<REPLACED>>/node_modules/react-native-test",
+}
+`;
+
+exports[`supports disabling dependency for ios platform 1`] = `
+Object {
+  "name": "react-native-test",
+  "platforms": Object {
+    "android": null,
+    "ios": null,
   },
   "root": "<<REPLACED>>/node_modules/react-native-test",
 }

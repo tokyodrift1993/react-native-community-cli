@@ -75,8 +75,7 @@ test('should return dependencies from package.json', () => {
   writeFiles(DIR, {
     ...REACT_NATIVE_MOCK,
     'node_modules/react-native-test/package.json': '{}',
-    'node_modules/react-native-test/ios/HelloWorld.xcodeproj/project.pbxproj':
-      '',
+    'node_modules/react-native-test/ReactNativeTest.podspec': '',
     'package.json': `{
       "dependencies": {
         "react-native": "0.0.1",
@@ -98,7 +97,20 @@ test('should read a config of a dependency and use it to load other settings', (
       dependency: {
         platforms: {
           ios: {
-            project: "./customLocation/customProject.xcodeproj"
+            scriptPhases: [
+              {
+                name: "[TEST] Some Configuration",
+                path: "./customLocation/custom.sh",
+                execution_position: "after_compile",
+                input_files: ["input_file"],
+                shell_path: "some/shell/path/bash",
+                output_files: ["output_file"],
+                input_file_lists: ["input_file_1", "input_file_2"],
+                output_file_lists: ["output_file_1", "output_file_2"],
+                show_env_vars_in_log: false,
+                dependency_file: "/path/to/dependency/file"
+              }
+            ]
           }
         }
       }
@@ -121,13 +133,7 @@ test('should merge project configuration with default values', () => {
   writeFiles(DIR, {
     ...REACT_NATIVE_MOCK,
     'node_modules/react-native-test/package.json': '{}',
-    'node_modules/react-native-test/react-native.config.js': `module.exports = {
-      dependency: {
-        assets: ["foo", "baz"]
-      }
-    }`,
-    'node_modules/react-native-test/ios/HelloWorld.xcodeproj/project.pbxproj':
-      '',
+    'node_modules/react-native-test/ReactNativeTest.podspec': '',
     'package.json': `{
       "dependencies": {
         "react-native": "0.0.1",
@@ -140,10 +146,9 @@ test('should merge project configuration with default values', () => {
         "react-native-test": {
           platforms: {
             ios: {
-              sourceDir: "./abc"
+              scriptPhases: [{name: "abc", path: "./phase.sh"}]
             }
           },
-          assets: ["foo"]
         }
       }
     }`,
@@ -231,7 +236,7 @@ test('supports dependencies from user configuration with custom root and propert
 
   writeFiles(DIR, {
     ...REACT_NATIVE_MOCK,
-    'native-libs/local-lib/ios/LocalRNLibrary.xcodeproj/project.pbxproj': '',
+    'native-libs/local-lib/LocalRNLibrary.podspec': '',
     'react-native.config.js': `
 const path = require('path');
 const root = path.resolve('${escapePathSeparator(
@@ -260,25 +265,13 @@ module.exports = {
   const {dependencies} = loadConfig(DIR);
   expect(removeString(dependencies['local-lib'], DIR)).toMatchInlineSnapshot(`
     Object {
-      "assets": Array [],
-      "hooks": Object {},
       "name": "local-lib",
-      "params": Array [],
       "platforms": Object {
         "android": null,
         "ios": Object {
           "configurations": Array [],
-          "folder": "<<REPLACED>>/native-libs/local-lib",
-          "libraryFolder": "Libraries",
-          "pbxprojPath": "<<REPLACED>>/native-libs/local-lib/ios/LocalRNLibrary.xcodeproj/project.pbxproj",
-          "plist": Array [],
-          "podfile": null,
           "podspecPath": "custom-path",
-          "projectName": "LocalRNLibrary.xcodeproj",
-          "projectPath": "<<REPLACED>>/native-libs/local-lib/ios/LocalRNLibrary.xcodeproj",
           "scriptPhases": Array [],
-          "sharedLibraries": Array [],
-          "sourceDir": "<<REPLACED>>/native-libs/local-lib/ios",
         },
       },
       "root": "<<REPLACED>>/native-libs/local-lib",
@@ -291,8 +284,7 @@ test('should apply build types from dependency config', () => {
   writeFiles(DIR, {
     ...REACT_NATIVE_MOCK,
     'node_modules/react-native-test/package.json': '{}',
-    'node_modules/react-native-test/ios/HelloWorld.xcodeproj/project.pbxproj':
-      '',
+    'node_modules/react-native-test/ReactNativeTest.podspec': '',
     'node_modules/react-native-test/react-native.config.js': `module.exports = {
       dependency: {
         platforms: {
@@ -331,10 +323,38 @@ test('supports dependencies from user configuration with custom build type', () 
   }
 }`,
     'node_modules/react-native-test/package.json': '{}',
-    'node_modules/react-native-test/ios/HelloWorld.xcodeproj/project.pbxproj':
-      '',
+    'node_modules/react-native-test/ReactNativeTest.podspec': '',
     'node_modules/react-native-test/react-native.config.js':
       'module.exports = {}',
+    'package.json': `{
+      "dependencies": {
+        "react-native": "0.0.1",
+        "react-native-test": "0.0.1"
+      }
+    }`,
+  });
+
+  const {dependencies} = loadConfig(DIR);
+  expect(
+    removeString(dependencies['react-native-test'], DIR),
+  ).toMatchSnapshot();
+});
+
+test('supports disabling dependency for ios platform', () => {
+  DIR = getTempDirectory('config_test_disable_dependency_platform');
+  writeFiles(DIR, {
+    ...REACT_NATIVE_MOCK,
+    'node_modules/react-native-test/package.json': '{}',
+    'node_modules/react-native-test/ReactNativeTest.podspec': '',
+    'node_modules/react-native-test/react-native.config.js': `
+      module.exports = {
+        dependency: {
+          platforms: {
+            ios: null
+          }
+        }
+      }
+    `,
     'package.json': `{
       "dependencies": {
         "react-native": "0.0.1",

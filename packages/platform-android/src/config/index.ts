@@ -11,15 +11,15 @@ import fs from 'fs';
 import findAndroidDir from './findAndroidDir';
 import findManifest from './findManifest';
 import findPackageClassName from './findPackageClassName';
-import readManifest from './readManifest';
 import {
   AndroidProjectParams,
-  AndroidDependencyParams,
   AndroidProjectConfig,
+  AndroidDependencyParams,
+  AndroidDependencyConfig,
 } from '@react-native-community/cli-types';
-import {XmlDocument} from 'xmldoc';
-
-const getPackageName = (manifest: XmlDocument) => manifest.attr.package;
+import {getPackageName} from './getAndroidProject';
+import {findLibraryName} from './findLibraryName';
+import {findComponentDescriptors} from './findComponentDescriptors';
 
 /**
  * Gets android project config by analyzing given folder and taking some
@@ -36,8 +36,9 @@ export function projectConfig(
   }
 
   const sourceDir = path.join(root, src);
+
   const appName = getAppName(sourceDir, userConfig.appName);
-  const isFlat = sourceDir.indexOf('app') === -1;
+
   const manifestPath = userConfig.manifestPath
     ? path.join(sourceDir, userConfig.manifestPath)
     : findManifest(path.join(sourceDir, appName));
@@ -46,60 +47,17 @@ export function projectConfig(
     return null;
   }
 
-  const manifest = readManifest(manifestPath);
-
-  const packageName = userConfig.packageName || getPackageName(manifest);
+  const packageName = userConfig.packageName || getPackageName(manifestPath);
 
   if (!packageName) {
     throw new Error(`Package name not found in ${manifestPath}`);
   }
 
-  const packageFolder =
-    userConfig.packageFolder || packageName.replace(/\./g, path.sep);
-
-  const mainFilePath = path.join(
-    sourceDir,
-    userConfig.mainFilePath ||
-      path.join(appName, `src/main/java/${packageFolder}/MainApplication.java`),
-  );
-
-  const stringsPath = path.join(
-    sourceDir,
-    userConfig.stringsPath ||
-      path.join(appName, '/src/main/res/values/strings.xml'),
-  );
-
-  const settingsGradlePath = path.join(
-    sourceDir,
-    userConfig.settingsGradlePath || 'settings.gradle',
-  );
-
-  const assetsPath = path.join(
-    sourceDir,
-    userConfig.assetsPath || path.join(appName, '/src/main/assets'),
-  );
-
-  const buildGradlePath = path.join(
-    sourceDir,
-    userConfig.buildGradlePath || 'build.gradle',
-  );
-
-  const dependencyConfiguration = userConfig.dependencyConfiguration;
-
   return {
     sourceDir,
-    isFlat,
-    folder: root,
-    stringsPath,
-    manifestPath,
-    buildGradlePath,
-    settingsGradlePath,
-    assetsPath,
-    mainFilePath,
-    packageName,
-    packageFolder,
     appName,
-    dependencyConfiguration,
+    packageName,
+    dependencyConfiguration: userConfig.dependencyConfiguration,
   };
 }
 
@@ -122,8 +80,12 @@ function getAppName(sourceDir: string, userConfigAppName: string | undefined) {
  */
 export function dependencyConfig(
   root: string,
-  userConfig: AndroidDependencyParams = {},
-) {
+  userConfig: AndroidDependencyParams | null = {},
+): AndroidDependencyConfig | null {
+  if (userConfig === null) {
+    return null;
+  }
+
   const src = userConfig.sourceDir || findAndroidDir(root);
 
   if (!src) {
@@ -139,8 +101,7 @@ export function dependencyConfig(
     return null;
   }
 
-  const manifest = readManifest(manifestPath);
-  const packageName = userConfig.packageName || getPackageName(manifest);
+  const packageName = userConfig.packageName || getPackageName(manifestPath);
   const packageClassName = findPackageClassName(sourceDir);
 
   /**
@@ -159,13 +120,21 @@ export function dependencyConfig(
 
   const buildTypes = userConfig.buildTypes || [];
   const dependencyConfiguration = userConfig.dependencyConfiguration;
+  const libraryName = userConfig.libraryName || findLibraryName(sourceDir);
+  const componentDescriptors =
+    userConfig.componentDescriptors || findComponentDescriptors(root);
+  const androidMkPath = userConfig.androidMkPath
+    ? path.join(sourceDir, userConfig.androidMkPath)
+    : path.join(sourceDir, 'build/generated/source/codegen/jni/Android.mk');
 
   return {
     sourceDir,
-    folder: root,
     packageImportPath,
     packageInstance,
     buildTypes,
     dependencyConfiguration,
+    libraryName,
+    componentDescriptors,
+    androidMkPath,
   };
 }

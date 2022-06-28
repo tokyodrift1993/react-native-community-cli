@@ -5,46 +5,48 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
-
-import * as projects from '../__fixtures__/projects';
+import {projectConfig} from '../index';
 
 jest.mock('path');
 jest.mock('fs');
 
 const fs = require('fs');
 
-const getProjectConfig = require('../').projectConfig;
-
 describe('ios::getProjectConfig', () => {
-  const userConfig = {};
-
-  beforeEach(() => {
-    fs.__setMockFilesystem({testDir: projects});
+  it('returns `null` if Podfile was not found', () => {
+    fs.__setMockFilesystem({});
+    expect(projectConfig('/', {})).toBe(null);
   });
-
   it('returns an object with ios project configuration', () => {
-    const folder = '/testDir/nested';
-
-    expect(getProjectConfig(folder, userConfig)).not.toBeNull();
-    expect(typeof getProjectConfig(folder, userConfig)).toBe('object');
-  });
-
-  it('returns `null` if ios project was not found', () => {
-    const folder = '/testDir/empty';
-
-    expect(getProjectConfig(folder, userConfig)).toBeNull();
-  });
-
-  it('returns normalized shared library names', () => {
-    const projectConfig = getProjectConfig('/testDir/nested', {
-      sharedLibraries: ['libc++', 'libz.tbd', 'HealthKit', 'HomeKit.framework'],
+    fs.__setMockFilesystem({
+      ios: {
+        Podfile: '',
+      },
     });
-
-    expect(projectConfig.sharedLibraries).toEqual([
-      'libc++.tbd',
-      'libz.tbd',
-      'HealthKit.framework',
-      'HomeKit.framework',
-    ]);
+    expect(projectConfig('/', {})).toMatchInlineSnapshot(`
+      Object {
+        "sourceDir": "/ios",
+        "xcodeProject": null,
+      }
+    `);
+  });
+  it('returns correct configuration when multiple Podfile are present', () => {
+    fs.__setMockFilesystem({
+      sample: {
+        Podfile: '',
+      },
+      ios: {
+        Podfile: '',
+      },
+      example: {
+        Podfile: '',
+      },
+    });
+    expect(projectConfig('/', {})).toMatchInlineSnapshot(`
+      Object {
+        "sourceDir": "/ios",
+        "xcodeProject": null,
+      }
+    `);
   });
 });

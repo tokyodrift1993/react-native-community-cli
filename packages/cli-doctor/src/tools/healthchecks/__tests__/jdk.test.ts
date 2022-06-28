@@ -4,7 +4,7 @@ import getEnvironmentInfo from '../../envinfo';
 import {EnvironmentInfo} from '../../../types';
 import * as tools from '@react-native-community/cli-tools';
 import * as common from '../common';
-import * as unzip from '../../unzip';
+import * as downloadAndUnzip from '../../downloadAndUnzip';
 import * as deleteFile from '../../deleteFile';
 
 jest.mock('execa', () => jest.fn());
@@ -38,27 +38,27 @@ describe('jdk', () => {
   it('returns false if JDK version is in range (JDK 9+ version number format)', async () => {
     // @ts-ignore
     environmentInfo.Languages.Java = {
-      version: '9.0.4',
+      version: '14.0.4',
     };
 
     const diagnostics = await jdk.getDiagnostics(environmentInfo);
     expect(diagnostics.needsToBeFixed).toBe(false);
   });
 
-  it('returns false if JDK version is in range (JDK 8 version number format)', async () => {
+  it('returns true if JDK version is not in range (JDK <= 8 version number format)', async () => {
     // @ts-ignore
     environmentInfo.Languages.Java = {
       version: '1.8.0_282',
     };
 
     const diagnostics = await jdk.getDiagnostics(environmentInfo);
-    expect(diagnostics.needsToBeFixed).toBe(false);
+    expect(diagnostics.needsToBeFixed).toBe(true);
   });
 
-  it('returns true if JDK version is not in range', async () => {
+  it('returns true if JDK version is not in range (JDK 9+ verison number format)', async () => {
     // @ts-ignore
     environmentInfo.Languages.Java = {
-      version: '7',
+      version: '10.0.15+10',
     };
 
     const diagnostics = await jdk.getDiagnostics(environmentInfo);
@@ -75,8 +75,8 @@ describe('jdk', () => {
     const loader = new tools.NoopLoader();
     const loaderSucceedSpy = jest.spyOn(loader, 'succeed');
     const loaderFailSpy = jest.spyOn(loader, 'fail');
-    const unzipSpy = jest
-      .spyOn(unzip, 'unzip')
+    const downloadAndUnzipSpy = jest
+      .spyOn(downloadAndUnzip, 'downloadAndUnzip')
       .mockImplementation(() => Promise.resolve());
 
     await jdk.win32AutomaticFix({
@@ -87,7 +87,7 @@ describe('jdk', () => {
 
     expect(loaderFailSpy).toHaveBeenCalledTimes(0);
     expect(logSpy).toHaveBeenCalledTimes(0);
-    expect(unzipSpy).toBeCalledTimes(1);
+    expect(downloadAndUnzipSpy).toBeCalledTimes(1);
     expect(loaderSucceedSpy).toBeCalledWith(
       'JDK installed successfully. Please restart your shell to see the changes',
     );
